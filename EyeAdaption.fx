@@ -159,11 +159,13 @@ float4 PS_EyeAdaption(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV
     
     float curve; float delta = 0;
     
+    [branch]
     if (avgLuma < fAdp_BrightenThreshold) 
     {
         curve = 1.0/fAdp_BrightenThreshold * abs(avgLuma - fAdp_BrightenThreshold);
         delta = curve * AdaptionDelta(luma, fAdp_BrightenMidtones, fAdp_BrightenShadows, fAdp_BrightenHighlights);
     }
+    [branch]
     if (avgLuma > fAdp_DarkenThreshold)
     {
         curve = -1.0/(1.0 - fAdp_DarkenThreshold) * abs(avgLuma - fAdp_DarkenThreshold);
