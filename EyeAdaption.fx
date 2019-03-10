@@ -1,7 +1,7 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // ReShade effect file
 // Eye Adaption by brussell
-// v. 2.0
+// v. 2.2
 // 
 // Credits:
 // luluco250 - luminance get/store code from Magic Bloom
@@ -10,18 +10,17 @@
 #include "ReShade.fxh"
 
 //effect parameters
-uniform float fAdp_Speed <
-    ui_label = "AdaptionSpeed";
-    ui_tooltip = "How fast the image adapts to brightness changes. 1 = instantanous adaption";
+uniform float fAdp_Delay <
+    ui_label = "Adaption Delay";
+    ui_tooltip = "How fast the image adapts to brightness changes. 0 = instantanous adaption";
     ui_category = "General settings";
     ui_type = "drag";
     ui_min = 0.0;
-    ui_max = 1.0;
-    ui_step = 0.001;
-> = 0.05;
+    ui_max = 2.0;
+> = 1.9;
 
 uniform float fAdp_TriggerRadius <
-    ui_label = "AdaptionTriggerRadius";
+    ui_label = "Adaption TriggerRadius";
     ui_tooltip = "Area that is used for calculation of the average image brighness. 1 = only the center of the image is used, 7 = the whole image is used";
     ui_category = "General settings";
     ui_type = "drag";
@@ -30,17 +29,17 @@ uniform float fAdp_TriggerRadius <
     ui_step = 1.0;
 > = 6.0;
 
-uniform float fAdp_BrightenThreshold <
-    ui_label = "BrightenThreshold";
-    ui_tooltip = "If the average image brightness is lower than this value, the image gets brightened";
-    ui_category = "Brightening";
+uniform float fAdp_Strength <
+    ui_label = "Adaption Strength";
+    ui_tooltip = "Base strength  of brightness adaption. Also affects how early adaption occurs";
+    ui_category = "General settings";
     ui_type = "drag";
     ui_min = 0.0;
-    ui_max = 0.4;
-> = 0.1;
+    ui_max = 2.0;
+> = 1.0;
 
 uniform float fAdp_BrightenHighlights <
-    ui_label = "BrightenHighlights";
+    ui_label = "Brighten Highlights";
     ui_tooltip = "Brightening strength for highlights";
     ui_category = "Brightening";
     ui_type = "drag";
@@ -49,16 +48,16 @@ uniform float fAdp_BrightenHighlights <
 > = 0.1;
 
 uniform float fAdp_BrightenMidtones <
-    ui_label = "BrightenMidtones";
+    ui_label = "Brighten Midtones";
     ui_tooltip = "Brightening strength for midtones";
     ui_category = "Brightening";
     ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
-> = 0.15;
+> = 0.2;
 
 uniform float fAdp_BrightenShadows <
-    ui_label = "BrightenShadows";
+    ui_label = "Brighten Shadows";
     ui_tooltip = "Brightening strength for shadows. Set this to 0 to preserve pure black";
     ui_category = "Brightening";
     ui_type = "drag";
@@ -66,42 +65,32 @@ uniform float fAdp_BrightenShadows <
     ui_max = 1.0;
 > = 0.0;
 
-uniform float fAdp_DarkenThreshold <
-    ui_label = "DarkenThreshold";
-    ui_tooltip = "If the average image brightness is higher than this value, the image gets darkened";
-    ui_category = "Darkening";
-    ui_type = "drag";
-    ui_min = 0.4;
-    ui_max = 1.0;
-
-> = 0.5;
-
 uniform float fAdp_DarkenHighlights <
-    ui_label = "DarkenHighlights";
+    ui_label = "Darken Highlights";
     ui_tooltip = "Darkening strength for highlights. Set this to 0 to preserve pure white";
     ui_category = "Darkening";
     ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
-> = 0.0;
+> = 0.05;
 
 uniform float fAdp_DarkenMidtones <
-    ui_label = "DarkenMidtones";
+    ui_label = "Darken Midtones";
     ui_tooltip = "Darkening strength for midtones";
     ui_category = "Darkening";
     ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
-> = 0.15;
+> = 0.2;
 
 uniform float fAdp_DarkenShadows <
-    ui_label = "DarkenShadows";
+    ui_label = "Darken Shadows";
     ui_tooltip = "Darkening strength for shadows";
     ui_category = "Darkening";
     ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
-> = 0.1;
+> = 0.0;
 
 
 //global vars
@@ -122,6 +111,7 @@ float PS_Luma(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     float4 color = tex2Dlod(ReShade::BackBuffer, float4(texcoord, 0, 0));
     float luma = dot(color.xyz, LumCoeff);
+    luma = saturate(luma * 1.5);
     return luma;
 }
 
@@ -129,16 +119,11 @@ float PS_AvgLuma(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Targ
 {
     float avgLumaCurrFrame = tex2Dlod(SamplerLuma, float4(0.5.xx, 0, fAdp_TriggerRadius)).x;
     float avgLumaLastFrame = tex2Dlod(SamplerAvgLumaLast, float4(0.0.xx, 0, 0)).x;
-    float avgLuma = lerp(avgLumaLastFrame, avgLumaCurrFrame, min(fAdp_Speed * 10.0 / Frametime, 1.0));
+    float delay = sign(fAdp_Delay) * saturate(0.81 + fAdp_Delay / 10 - Frametime / 1000);
+    float avgLuma = lerp(avgLumaCurrFrame, avgLumaLastFrame, delay);
     return avgLuma;
 }
     
-float PS_StoreAvgLuma(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
-{
-   float avgLuma = tex2Dlod(SamplerAvgLuma, float4(0.0.xx, 0, 0)).x;
-   return avgLuma;
-}
-
 float AdaptionDelta(float luma, float strengthMidtones, float strengthShadows, float strengthHighlights)
 {
     float midtones = (4.0 * strengthMidtones - strengthHighlights - strengthShadows) * luma * (1.0 - luma);
@@ -153,30 +138,27 @@ float4 PS_EyeAdaption(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV
     float4 color = tex2Dlod(ReShade::BackBuffer, float4(texcoord, 0, 0));
     float avgLuma = tex2Dlod(SamplerAvgLuma, float4(0.0.xx, 0, 0)).x;
     
-    color.xyz = pow(color.xyz, 1/2.2);
+    color.xyz = pow(abs(color.xyz), 1/2.2);
     float luma = dot(color.xyz, LumCoeff);
     float3 chroma = color.xyz - luma;
-    
-    float curve; float delta = 0;
-    
-    [branch]
-    if (avgLuma < fAdp_BrightenThreshold) 
-    {
-        curve = 1.0/fAdp_BrightenThreshold * abs(avgLuma - fAdp_BrightenThreshold);
-        delta = curve * AdaptionDelta(luma, fAdp_BrightenMidtones, fAdp_BrightenShadows, fAdp_BrightenHighlights);
-    }
-    [branch]
-    if (avgLuma > fAdp_DarkenThreshold)
-    {
-        curve = -1.0/(1.0 - fAdp_DarkenThreshold) * abs(avgLuma - fAdp_DarkenThreshold);
-        delta = curve * AdaptionDelta(luma, fAdp_DarkenMidtones, fAdp_DarkenShadows, fAdp_DarkenHighlights);
-    }
+   
+    float delta = 0;
+
+    float curve = fAdp_Strength * 10.0 * pow(avgLuma - 0.5, 4.0);
+    delta = (avgLuma < 0.5) ? AdaptionDelta(luma, fAdp_BrightenMidtones, fAdp_BrightenShadows, fAdp_BrightenHighlights) : -AdaptionDelta(luma, fAdp_DarkenMidtones, fAdp_DarkenShadows, fAdp_DarkenHighlights);
+    delta *= curve;
     
     luma = saturate(luma + delta);
     color.xyz = luma + chroma;
-    color.xyz = pow(color.xyz, 2.2);
+    color.xyz = pow(abs(color.xyz), 2.2);
     
     return color;
+}
+
+float PS_StoreAvgLuma(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
+{
+    float avgLuma = tex2Dlod(SamplerAvgLuma, float4(0.0.xx, 0, 0)).x;
+    return avgLuma;
 }
 
 //techniques
