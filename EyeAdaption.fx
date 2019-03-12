@@ -144,7 +144,7 @@ float4 PS_EyeAdaption(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV
    
     float delta = 0;
 
-    float curve = fAdp_Strength * 10.0 * pow(avgLuma - 0.5, 4.0);
+    float curve = fAdp_Strength * 10.0 * pow(abs(avgLuma - 0.5), 4.0);
     delta = (avgLuma < 0.5) ? AdaptionDelta(luma, fAdp_BrightenMidtones, fAdp_BrightenShadows, fAdp_BrightenHighlights) : -AdaptionDelta(luma, fAdp_DarkenMidtones, fAdp_DarkenShadows, fAdp_DarkenHighlights);
     delta *= curve;
     
