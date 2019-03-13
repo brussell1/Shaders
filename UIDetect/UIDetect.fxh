@@ -33,7 +33,7 @@ UIPixelRGB[PIXELNUMBER]         //the UI pixels RGB values
 
 static const float3 UIPixelCoord[PIXELNUMBER]=
 {
-	float3(562,121,1),  //TAB - Mission details
+    float3(562,121,1),  //TAB - Mission details
     float3(614,121,1),
     float3(1589,106,2), //ESC - Menu
     float3(1695,106,2),
@@ -45,7 +45,7 @@ static const float3 UIPixelCoord[PIXELNUMBER]=
 
 static const float3 UIPixelRGB[PIXELNUMBER]=
 {
-	float3(255,204,102),
+    float3(255,204,102),
     float3(255,204,102),
     float3(255,204,102),
     float3(255,204,102),
