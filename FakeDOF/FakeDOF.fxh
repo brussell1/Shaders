@@ -1,3 +1,7 @@
+uniform bool bFakeDOF_reverse <
+      ui_label = "FakeDOF Reverse depth mask";
+> = false;
+
 uniform float fFakeDOF_coordx <
 	ui_type = "drag";
 	ui_min = 0.0; ui_max = 1.0;
@@ -50,7 +54,8 @@ float GetLinearizedDepth(float2 texcoord)
     float dist = dot(dist_xy, dist_xy);
 
     float depth = fFakeDOF_curve_param_a + (-fFakeDOF_curve_param_a / (1.0 + pow(dist / (fFakeDOF_curve_param_c * fFakeDOF_curve_param_b), fFakeDOF_curve_param_c / fFakeDOF_curve_param_b)));
-
+    
+    depth = bFakeDOF_reverse ? 1 - depth : depth;
     return depth;
 }
 
