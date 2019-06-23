@@ -1,3 +1,6 @@
+//Reshade.fxh with FakeDOF extension
+//Reshade.fxh source at https://github.com/crosire/reshade-shaders by crosire
+
 #pragma once
 
 #if !defined(__RESHADE__) || __RESHADE__ < 30000
