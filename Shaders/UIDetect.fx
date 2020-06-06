@@ -10,14 +10,14 @@
 #include "ReShadeUI.fxh"
 
 uniform float fPixelPosX < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Pixel X-Position";
+    ui_label = "Pixel X-Position";
     ui_category = "Show Pixel";
     ui_min = 0; ui_max = BUFFER_WIDTH;
     ui_step = 1;
 > = 100;
 
 uniform float fPixelPosY < __UNIFORM_SLIDER_FLOAT1
-	ui_label = "Pixel Y-Position";
+    ui_label = "Pixel Y-Position";
     ui_category = "Show Pixel";
     ui_min = 0; ui_max = BUFFER_HEIGHT;
     ui_step = 1;
