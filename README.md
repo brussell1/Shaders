@@ -1,2 +1,2 @@
 # Shaders
-My shaders for ReShade by crosire (https://github.com/crosire/reshade-shaders)
+My shaders for ReShade by crosire (https://github.com/crosire/reshade)
