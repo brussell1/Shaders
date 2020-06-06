@@ -1,126 +1,115 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// ReShade effect file
 // Eye Adaption by brussell
-// v. 2.3
+// v. 2.31
+// License: CC BY 4.0
 //
 // Credits:
 // luluco250 - luminance get/store code from Magic Bloom
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#include "ReShade.fxh"
 #include "ReShadeUI.fxh"
 
 //effect parameters
-uniform float fAdp_Delay <
+uniform float fAdp_Delay < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Adaption Delay";
     ui_tooltip = "How fast the image adapts to brightness changes.\n"
                  "0 = instantanous adaption\n"
                  "2 = very slow adaption";
     ui_category = "General settings";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 2.0;
 > = 1.6;
 
-uniform float fAdp_TriggerRadius <
+uniform float fAdp_TriggerRadius < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Adaption TriggerRadius";
     ui_tooltip = "Screen area, whose average brightness triggers adaption.\n"
                  "1 = only the center of the image is used\n"
                  "7 = the whole image is used";
     ui_category = "General settings";
-    ui_type = "drag";
     ui_min = 1.0;
     ui_max = 7.0;
     ui_step = 0.1;
 > = 6.0;
 
-uniform float fAdp_YAxisFocalPoint <
+uniform float fAdp_YAxisFocalPoint < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Y Axis Focal Point";
     ui_tooltip = "Where along the Y Axis the Adaption TriggerRadius applies.\n"
                  "0 = Top of the screen\n"
                  "1 = Bottom of the screen";
     ui_category = "General settings";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.5;
 
-uniform float fAdp_Equilibrium <
+uniform float fAdp_Equilibrium < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Adaption Equilibrium";
     ui_tooltip = "The value of image brightness for which there is no brightness adaption.\n"
                  "0 = late brightening, early darkening\n"
                  "1 = early brightening, late darkening";
     ui_category = "General settings";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.5;
 
-uniform float fAdp_Strength <
+uniform float fAdp_Strength < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Adaption Strength";
     ui_tooltip = "Base strength of brightness adaption.\n";
     ui_category = "General settings";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 2.0;
 > = 1.0;
 
-uniform float fAdp_BrightenHighlights <
+uniform float fAdp_BrightenHighlights < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Brighten Highlights";
     ui_tooltip = "Brightening strength for highlights.";
     ui_category = "Brightening";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.1;
 
-uniform float fAdp_BrightenMidtones <
+uniform float fAdp_BrightenMidtones < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Brighten Midtones";
     ui_tooltip = "Brightening strength for midtones.";
     ui_category = "Brightening";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.2;
 
-uniform float fAdp_BrightenShadows <
+uniform float fAdp_BrightenShadows < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Brighten Shadows";
     ui_tooltip = "Brightening strength for shadows.\n"
                  "Set this to 0 to preserve pure black.";
     ui_category = "Brightening";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.1;
 
-uniform float fAdp_DarkenHighlights <
+uniform float fAdp_DarkenHighlights < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Darken Highlights";
     ui_tooltip = "Darkening strength for highlights.\n"
                  "Set this to 0 to preserve pure white.";
     ui_category = "Darkening";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.1;
 
-uniform float fAdp_DarkenMidtones <
+uniform float fAdp_DarkenMidtones < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Darken Midtones";
     ui_tooltip = "Darkening strength for midtones.";
     ui_category = "Darkening";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.2;
 
-uniform float fAdp_DarkenShadows <
+uniform float fAdp_DarkenShadows < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Darken Shadows";
     ui_tooltip = "Darkening strength for shadows.";
     ui_category = "Darkening";
-    ui_type = "drag";
     ui_min = 0.0;
     ui_max = 1.0;
 > = 0.1;
 
+#include "ReShade.fxh"
 
 //global vars
 #define LumCoeff float3(0.212656, 0.715158, 0.072186)
