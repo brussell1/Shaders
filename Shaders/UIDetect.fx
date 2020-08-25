@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // UIDetect by brussell
-// v. 2.0
+// v. 2.0.1
 // License: CC BY 4.0
 //
 // UIDetect is configured via the file UIDectect.fxh. Please look
@@ -103,7 +103,7 @@ float4 PS_RestoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : S
         else if (ui > .29) uiMask = uiMaskRGB.b;  //UI-Nr  3 -> apply masklayer blue
         else if (ui > .19) uiMask = uiMaskRGB.g;  //UI-Nr  2 -> apply masklayer green
         else if (ui > .09) uiMask = uiMaskRGB.r;  //UI-Nr  1 -> apply masklayer red
-        color = lerp(color, colorOrig, uiMask);
+        color.rgb = lerp(color.rgb, colorOrig.rgb, uiMask);
     #else
         color = ui > epsilon ? colorOrig : color;
     #endif
