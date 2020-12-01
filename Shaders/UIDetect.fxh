@@ -1,5 +1,5 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// UIDetect 2.0 header file by brussell
+// UIDetect 2.1.0 header file by brussell
 // License: CC BY 4.0
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -77,6 +77,10 @@ Required shader load order:
 #ifndef UIDetect_USE_RGB_MASK
     #define UIDetect_USE_RGB_MASK  0       // [0 or 1] Enable RGB UI mask (description above) 
 #endif
+
+#ifndef UIDetect_INVERT
+    #define UIDetect_INVERT        0       // [0 or 1] Enable Inverted Mode (only show effects when 
+#endif                                     // UI is visible)
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
