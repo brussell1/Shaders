@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // UIDetect by brussell
-// v. 2.0.1
+// v. 2.1.0
 // License: CC BY 4.0
 //
 // UIDetect is configured via the file UIDectect.fxh. Please look
@@ -92,8 +92,13 @@ float4 PS_StoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_
 float4 PS_RestoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     float ui = tex2D(UIDetect, float2(0,0)).x;
-    float4 colorOrig = tex2D(ColorOrig, texcoord);
-    float4 color = tex2D(ReShade::BackBuffer, texcoord);
+    #if (UIDetect_INVERT == 0)
+        float4 colorOrig = tex2D(ColorOrig, texcoord);
+        float4 color = tex2D(ReShade::BackBuffer, texcoord);
+    #else
+        float4 color = tex2D(ColorOrig, texcoord);
+        float4 colorOrig = tex2D(ReShade::BackBuffer, texcoord);
+    #endif
     
     #if (UIDetect_USE_RGB_MASK == 1)
         float3 uiMaskRGB = 1 - tex2D(UIDetectMask, texcoord).rgb;
