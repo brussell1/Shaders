@@ -34,7 +34,7 @@ uniform bool bAC_EnableSourceColorFill <
 
 uniform float3 fAC_FillColor <
     ui_label = "Source area fill color.";
-    ui_type= "color";
+    ui_type = "color";
 > = float3(0.0, 0.0, 0.0);
 
 //pixel shaders
@@ -49,7 +49,7 @@ float4 PS_AreaCopy(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Ta
     float2 dist = destTopLeft - sourceTopLeft;
     
     if (pos.x > destTopLeft.x && pos.y > destTopLeft.y && pos.x < destBottomRight.x && pos.y < destBottomRight.y) {
-        color = tex2Dfetch(ReShade::BackBuffer, float2(pos.x - dist.x, pos.y - dist.y));
+        color = tex2Dfetch(ReShade::BackBuffer, pos.xy - dist);
     }
     
     if (bAC_EnableSourceColorFill) {
