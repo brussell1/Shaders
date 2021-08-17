@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AreaCopy by brussell
-// v. 1.1
+// v. 1.2
 // License: CC BY 4.0
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -48,6 +48,15 @@ uniform float fAC_Zoom <
     ui_max = 20.0;
     ui_step = 0.05;
 > = 1.0;
+
+uniform float fAC_DestAngle <
+    ui_label = "Destination rotation";
+    ui_tooltip = "Rotation angle of the destination area.";
+    ui_type = "slider";
+    ui_min = 0.0;
+    ui_max = 360;
+    ui_step = 15.0;
+> = 0;
 
 uniform bool bAC_EnableDestOutline <
       ui_label = "Enable destination outline";
@@ -97,17 +106,34 @@ uniform float fAC_SourceOpacity <
 #include "ReShade.fxh"
 
 //pixel shaders
-float4 PS_AreaCopy(float4 pos : SV_Position) : SV_Target {
-
-    float4 color = tex2Dfetch(ReShade::BackBuffer, pos.xy);
+float4 PS_AreaCopy(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target {
+    float4 color = tex2Dlod(ReShade::BackBuffer, float4(texcoord, 0, 0));
     float4 colorBackup = color;
-    float2 destpos = (pos.xy - fAC_DestXY - fAC_Size/2.0)/fAC_Zoom + fAC_SourceXY + fAC_Size/2.0;
-    float4 colorDestPos= tex2Dfetch(ReShade::BackBuffer, destpos);
+    float2 areaCenter = fAC_Size/2.0;
+    float sine, cosine;
+    float2 sourceCenterCoord;
+
+    float2 destPos = (pos.xy - fAC_DestXY - areaCenter) / fAC_Zoom + fAC_SourceXY + areaCenter;
+    float2 destCoord = destPos * ReShade::PixelSize;
 
     float2 sourceTopLeft = fAC_SourceXY;
     float2 sourceBottomRight = fAC_SourceXY + fAC_Size;
     float2 destTopLeft = fAC_DestXY;
     float2 destBottomRight = fAC_DestXY + fAC_Size;
+
+    if (fAC_DestAngle != 0) {
+        sine = sin(radians(-fAC_DestAngle));
+        cosine = cos(radians(-fAC_DestAngle));
+        sourceCenterCoord = (fAC_SourceXY + areaCenter) * ReShade::PixelSize;
+
+        destCoord -= sourceCenterCoord;
+        destCoord.x *= ReShade::AspectRatio;
+        destCoord = float2(cosine * destCoord.x - sine * destCoord.y, cosine * destCoord.y + sine * destCoord.x);
+        destCoord.x *= 1.0 / ReShade::AspectRatio;
+        destCoord += sourceCenterCoord;
+    }
+
+    float4 colorDest= tex2Dlod(ReShade::BackBuffer, float4(destCoord, 0, 0));
 
     if (bAC_EnableSourceColorFill) {
         if (pos.x > sourceTopLeft.x && pos.y > sourceTopLeft.y && pos.x < sourceBottomRight.x && pos.y < sourceBottomRight.y) {
@@ -122,7 +148,7 @@ float4 PS_AreaCopy(float4 pos : SV_Position) : SV_Target {
     }
 
     if (pos.x > destTopLeft.x && pos.y > destTopLeft.y && pos.x < destBottomRight.x && pos.y < destBottomRight.y) {
-        color.xyz = lerp(colorBackup.xyz, colorDestPos.xyz, fAC_DestOpacity);
+        color.xyz = lerp(colorBackup.xyz, colorDest.xyz, fAC_DestOpacity);
     }
 
     return color;
