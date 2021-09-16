@@ -7,7 +7,7 @@
 // v. 1.0.0
 // License: CC By 4.0
 //
-// UIDetect is configured via the file UIDetect.fxh. Please look
+// UIDetect is configured via the file UIDetectMulti.fxh. Please look
 // there for a full description and usage of this shader.
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -49,42 +49,42 @@ uniform float toleranceB < __UNIFORM_SLIDER_FLOAT1
 > = 1;
 
 #include "ReShade.fxh"
-#include "UIDetect.fxh"
+#include "UIDetectMulti.fxh"
 
 //textures and samplers
 texture texColorOrig { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; };
 sampler ColorOrig { Texture = texColorOrig; };
 
-texture texUIDetectMask <source="UIDetectMaskRGB.png";> { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+texture texUIDetectMask <source="UIDETECTMASKRGBMULTI.png";> { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
 sampler UIDetectMask { Texture = texUIDetectMask; };
 
 texture texUIDetect { Width = 1; Height = 1; Format = RGBA8; };
 sampler UIDetect { Texture = texUIDetect; };
 
 #if (UIDetect_USE_RGB_MASK > 1)
-	texture texUIDetectMask2 <source="UIDetectMaskRGB2.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-  sampler UIDetectMask2 { Texture = texUIDetectMask2; };
+	texture texUIDetectMask2 <source="UIDETECTMASKRGBMULTI2.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMask2 { Texture = texUIDetectMask2; };
 	texture texUIDetect2 { Width = 1; Height = 1; Format = RGBA8; };
 	sampler UIDetect2 { Texture = texUIDetect2; };
 #endif
 
 #if (UIDetect_USE_RGB_MASK > 2)
-	texture texUIDetectMask3 <source="UIDetectMaskRGB3.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-  sampler UIDetectMask3 { Texture = texUIDetectMask3; };
+	texture texUIDetectMask3 <source="UIDETECTMASKRGBMULTI3.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMask3 { Texture = texUIDetectMask3; };
 	texture texUIDetect3 { Width = 1; Height = 1; Format = RGBA8; };
 	sampler UIDetect3 { Texture = texUIDetect3; };
 #endif
 
 #if (UIDetect_USE_RGB_MASK > 3)
-	texture texUIDetectMask4 <source="UIDetectMaskRGB4.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-  sampler UIDetectMask4 { Texture = texUIDetectMask4; };
+	texture texUIDetectMask4 <source="UIDETECTMASKRGBMULTI4.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMask4 { Texture = texUIDetectMask4; };
 	texture texUIDetect4 { Width = 1; Height = 1; Format = RGBA8; };
 	sampler UIDetect4 { Texture = texUIDetect4; };
 #endif
 
 #if (UIDetect_USE_RGB_MASK > 4)
-	texture texUIDetectMask5 <source="UIDetectMaskRGB5.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-  sampler UIDetectMask5 { Texture = texUIDetectMask5; };
+	texture texUIDetectMask5 <source="UIDETECTMASKRGBMULTI5.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMask5 { Texture = texUIDetectMask5; };
 	texture texUIDetect5 { Width = 1; Height = 1; Format = RGBA8; };
 	sampler UIDetect5 { Texture = texUIDetect5; };
 #endif
@@ -99,33 +99,57 @@ float3 PS_ShowPixel(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 
 float4 PS_UIDetect(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
-  float3 pixelColor, uiPixelColor, diff;
+	float3 pixelColor, uiPixelColor, diff;
 	float2 pixelCoord;
 	float3 uicolors;
-	int uinumber = 0;
-  bool uiDetected1 = false;
-  bool uiDetected2 = false;
-  bool uiDetected3 = false;
+	int uinumber;
+	bool uiDetected1 = false;
+	bool uiDetected2 = false;
+	bool uiDetected3 = false;
+	
+    #if (UIDetect_EveryPixel == 0)
+		bool uiDetected01 = false;
+		bool uiDetected02 = false;
+		bool uiDetected03 = false;
+	#else
+		bool uiDetected01 = true;
+		bool uiDetected02 = true;
+		bool uiDetected03 = true;
+	#endif
+	
+	for (int i=0; i < PIXELNUMBER; i++){
+		if (UIPixelCoord_UINr[i].z == 1){uinumber = i; break;}
+	}
 
     for (int i=0; i < 3; i++){
-		  pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-      pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
-      uiPixelColor = UIPixelRGB[uinumber].rgb;
-      diff = abs(pixelColor - uiPixelColor);
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 1) uiDetected1 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 1) uiDetected1 = false;
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 2) uiDetected2 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 2) uiDetected2 = false;	
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 3) uiDetected3 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 3) uiDetected3 = false;
-		  if (uiDetected1 == true){uicolors.r = 0;}
-		  if (uiDetected1 == false){uicolors.r = 1;}
-		  if (uiDetected2 == true){uicolors.g = 0;}
-		  if (uiDetected2 == false){uicolors.g = 1;}
-		  if (uiDetected3 == true){uicolors.b = 0;}
-		  if (uiDetected3 == false){uicolors.b = 1;}
-		  if (uinumber == 3) {return float4(uicolors, 1);};
-		  uinumber += 1;
+		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
+		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		uiPixelColor = UIPixelRGB[uinumber].rgb;
+		diff = abs(pixelColor - uiPixelColor);
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 1) uiDetected1 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 1) uiDetected1 = false;
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 2) uiDetected2 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 2) uiDetected2 = false;	
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 3) uiDetected3 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 3) uiDetected3 = false;
+		#if (UIDetect_EveryPixel == 0)
+			if (uiDetected1 == true){uiDetected01 = true;}
+			if (uiDetected2 == true){uiDetected02 = true;}
+			if (uiDetected3 == true){uiDetected03 = true;}
+		#else
+			if (uiDetected1 == false){uiDetected01 = false;}
+			if (uiDetected2 == false){uiDetected02 = false;}
+			if (uiDetected3 == false){uiDetected03 = false;}
+		#endif
+		if (uiDetected01 == true){uicolors.r = 0;}
+		if (uiDetected01 == false){uicolors.r = 1;}
+		if (uiDetected02 == true){uicolors.g = 0;}
+		if (uiDetected02 == false){uicolors.g = 1;}
+		if (uiDetected03 == true){uicolors.b = 0;}
+		if (uiDetected03 == false){uicolors.b = 1;}
+		if (UIPixelCoord_UINr[uinumber].z == UIPixelCoord_UINr[uinumber + 1].z){i -= 1;}
+		if (i == 3) {return float4(uicolors, 1);};
+		uinumber += 1;
 	  }
 	return float4(uicolors, 1);
 }
@@ -133,33 +157,57 @@ float4 PS_UIDetect(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Ta
 #if (UIDetect_USE_RGB_MASK > 1)
 float4 PS_UIDetect2(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
-  float3 pixelColor, uiPixelColor, diff;
+	float3 pixelColor, uiPixelColor, diff;
 	float2 pixelCoord;
 	float3 uicolors;
-	int uinumber = 3;
-  bool uiDetected1 = false;
-  bool uiDetected2 = false;
-  bool uiDetected3 = false;
+	int uinumber;
+	bool uiDetected1 = false;
+	bool uiDetected2 = false;
+	bool uiDetected3 = false;
+
+    #if (UIDetect_EveryPixel == 0)
+		bool uiDetected01 = false;
+		bool uiDetected02 = false;
+		bool uiDetected03 = false;
+	#else
+		bool uiDetected01 = true;
+		bool uiDetected02 = true;
+		bool uiDetected03 = true;
+	#endif
+	
+	for (int i=0; i < PIXELNUMBER; i++){
+		if (UIPixelCoord_UINr[i].z == 4){uinumber = i; break;}
+	}  
 
     for (int i=0; i < 3; i++){
-		  pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-      pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
-      uiPixelColor = UIPixelRGB[uinumber].rgb;
-      diff = abs(pixelColor - uiPixelColor);
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 4) uiDetected1 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 4) uiDetected1 = false;
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 5) uiDetected2 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 5) uiDetected2 = false;	
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 6) uiDetected3 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 6) uiDetected3 = false;
-		  if (uiDetected1 == true){uicolors.r = 0;}
-		  if (uiDetected1 == false){uicolors.r = 1;}
-		  if (uiDetected2 == true){uicolors.g = 0;}
-		  if (uiDetected2 == false){uicolors.g = 1;}
-		  if (uiDetected3 == true){uicolors.b = 0;}
-		  if (uiDetected3 == false){uicolors.b = 1;}
-		  if (uinumber == 6) {return float4(uicolors, 1);};
-		  uinumber += 1;
+		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
+		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		uiPixelColor = UIPixelRGB[uinumber].rgb;
+		diff = abs(pixelColor - uiPixelColor);
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 4) uiDetected1 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 4) uiDetected1 = false;
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 5) uiDetected2 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 5) uiDetected2 = false;	
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 6) uiDetected3 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 6) uiDetected3 = false;
+		#if (UIDetect_EveryPixel == 0)
+			if (uiDetected1 == true){uiDetected01 = true;}
+			if (uiDetected2 == true){uiDetected02 = true;}
+			if (uiDetected3 == true){uiDetected03 = true;}
+		#else
+			if (uiDetected1 == false){uiDetected01 = false;}
+			if (uiDetected2 == false){uiDetected02 = false;}
+			if (uiDetected3 == false){uiDetected03 = false;}
+		#endif	
+		if (uiDetected01 == true){uicolors.r = 0;}
+		if (uiDetected01 == false){uicolors.r = 1;}
+		if (uiDetected02 == true){uicolors.g = 0;}
+		if (uiDetected02 == false){uicolors.g = 1;}
+		if (uiDetected03 == true){uicolors.b = 0;}
+		if (uiDetected03 == false){uicolors.b = 1;}
+		if (UIPixelCoord_UINr[uinumber].z == UIPixelCoord_UINr[uinumber + 1].z){i -= 1;}
+		if (i == 3) {return float4(uicolors, 1);};
+		uinumber += 1;
 	  }
 	return float4(uicolors, 1);
 }
@@ -167,33 +215,57 @@ float4 PS_UIDetect2(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 #if (UIDetect_USE_RGB_MASK > 2)
 float4 PS_UIDetect3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
-  float3 pixelColor, uiPixelColor, diff;
+	float3 pixelColor, uiPixelColor, diff;
 	float2 pixelCoord;
 	float3 uicolors;
-	int uinumber = 6;
-  bool uiDetected1 = false;
-  bool uiDetected2 = false;
-  bool uiDetected3 = false;
+	int uinumber;
+	bool uiDetected1 = false;
+	bool uiDetected2 = false;
+	bool uiDetected3 = false;
+
+    #if (UIDetect_EveryPixel == 0)
+		bool uiDetected01 = false;
+		bool uiDetected02 = false;
+		bool uiDetected03 = false;
+	#else
+		bool uiDetected01 = true;
+		bool uiDetected02 = true;
+		bool uiDetected03 = true;
+	#endif
+
+	for (int i=0; i < PIXELNUMBER; i++){
+		if (UIPixelCoord_UINr[i].z == 7){uinumber = i; break;}
+	}
 
     for (int i=0; i < 3; i++){
-	    pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-      pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
-      uiPixelColor = UIPixelRGB[uinumber].rgb;
-      diff = abs(pixelColor - uiPixelColor);
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 7) uiDetected1 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 7) uiDetected1 = false;
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 8) uiDetected2 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 8) uiDetected2 = false;	
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 9) uiDetected3 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 9) uiDetected3 = false;
-		  if (uiDetected1 == true){uicolors.r = 0;}
-		  if (uiDetected1 == false){uicolors.r = 1;}
-		  if (uiDetected2 == true){uicolors.g = 0;}
-		  if (uiDetected2 == false){uicolors.g = 1;}
-		  if (uiDetected3 == true){uicolors.b = 0;}
-		  if (uiDetected3 == false){uicolors.b = 1;}
-		  if (uinumber == 9) {return float4(uicolors, 1);};
-		  uinumber += 1;
+		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
+		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		uiPixelColor = UIPixelRGB[uinumber].rgb;
+		diff = abs(pixelColor - uiPixelColor);
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 7) uiDetected1 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 7) uiDetected1 = false;
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 8) uiDetected2 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 8) uiDetected2 = false;	
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 9) uiDetected3 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 9) uiDetected3 = false;
+		#if (UIDetect_EveryPixel == 0)
+			if (uiDetected1 == true){uiDetected01 = true;}
+			if (uiDetected2 == true){uiDetected02 = true;}
+			if (uiDetected3 == true){uiDetected03 = true;}
+		#else
+			if (uiDetected1 == false){uiDetected01 = false;}
+			if (uiDetected2 == false){uiDetected02 = false;}
+			if (uiDetected3 == false){uiDetected03 = false;}
+		#endif	
+		if (uiDetected01 == true){uicolors.r = 0;}
+		if (uiDetected01 == false){uicolors.r = 1;}
+		if (uiDetected02 == true){uicolors.g = 0;}
+		if (uiDetected02 == false){uicolors.g = 1;}
+		if (uiDetected03 == true){uicolors.b = 0;}
+		if (uiDetected03 == false){uicolors.b = 1;}
+		if (UIPixelCoord_UINr[uinumber].z == UIPixelCoord_UINr[uinumber + 1].z){i -= 1;}
+		if (i == 3) {return float4(uicolors, 1);};
+		uinumber += 1;
 	  }
 	return float4(uicolors, 1);
 }
@@ -201,33 +273,57 @@ float4 PS_UIDetect3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 #if (UIDetect_USE_RGB_MASK > 3)
 float4 PS_UIDetect4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
-  float3 pixelColor, uiPixelColor, diff;
+	float3 pixelColor, uiPixelColor, diff;
 	float2 pixelCoord;
 	float3 uicolors;
-	int uinumber = 9;
-  bool uiDetected1 = false;
-  bool uiDetected2 = false;
-  bool uiDetected3 = false;
+	int uinumber;
+	bool uiDetected1 = false;
+	bool uiDetected2 = false;
+	bool uiDetected3 = false;
+
+    #if (UIDetect_EveryPixel == 0)
+		bool uiDetected01 = false;
+		bool uiDetected02 = false;
+		bool uiDetected03 = false;
+	#else
+		bool uiDetected01 = true;
+		bool uiDetected02 = true;
+		bool uiDetected03 = true;
+	#endif
+
+	for (int i=0; i < PIXELNUMBER; i++){
+		if (UIPixelCoord_UINr[i].z == 10){uinumber = i; break;}
+	}
 
     for (int i=0; i < 3; i++){
-		  pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-      pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
-      uiPixelColor = UIPixelRGB[uinumber].rgb;
-      diff = abs(pixelColor - uiPixelColor);
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 10) uiDetected1 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 10) uiDetected1 = false;
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 11) uiDetected2 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 11) uiDetected2 = false;	
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 12) uiDetected3 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 12) uiDetected3 = false;
-		  if (uiDetected1 == true){uicolors.r = 0;}
-		  if (uiDetected1 == false){uicolors.r = 1;}
-		  if (uiDetected2 == true){uicolors.g = 0;}
-		  if (uiDetected2 == false){uicolors.g = 1;}
-		  if (uiDetected3 == true){uicolors.b = 0;}
-		  if (uiDetected3 == false){uicolors.b = 1;}
-		  if (uinumber == 12) {return float4(uicolors, 1);};
-		  uinumber += 1;
+		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
+		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		uiPixelColor = UIPixelRGB[uinumber].rgb;
+		diff = abs(pixelColor - uiPixelColor);
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 10) uiDetected1 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 10) uiDetected1 = false;
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 11) uiDetected2 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 11) uiDetected2 = false;	
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 12) uiDetected3 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 12) uiDetected3 = false;
+		#if (UIDetect_EveryPixel == 0)
+			if (uiDetected1 == true){uiDetected01 = true;}
+			if (uiDetected2 == true){uiDetected02 = true;}
+			if (uiDetected3 == true){uiDetected03 = true;}
+		#else
+			if (uiDetected1 == false){uiDetected01 = false;}
+			if (uiDetected2 == false){uiDetected02 = false;}
+			if (uiDetected3 == false){uiDetected03 = false;}
+		#endif	
+		if (uiDetected01 == true){uicolors.r = 0;}
+		if (uiDetected01 == false){uicolors.r = 1;}
+		if (uiDetected02 == true){uicolors.g = 0;}
+		if (uiDetected02 == false){uicolors.g = 1;}
+		if (uiDetected03 == true){uicolors.b = 0;}
+		if (uiDetected03 == false){uicolors.b = 1;}
+		if (UIPixelCoord_UINr[uinumber].z == UIPixelCoord_UINr[uinumber + 1].z){i -= 1;}
+		if (i == 3) {return float4(uicolors, 1);};
+		uinumber += 1;
 	  }
 	return float4(uicolors, 1);
 }
@@ -235,33 +331,57 @@ float4 PS_UIDetect4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 #if (UIDetect_USE_RGB_MASK > 4)
 float4 PS_UIDetect5(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
-  float3 pixelColor, uiPixelColor, diff;
+	float3 pixelColor, uiPixelColor, diff;
 	float2 pixelCoord;
 	float3 uicolors;
-	int uinumber = 12;
-  bool uiDetected1 = false;
-  bool uiDetected2 = false;
-  bool uiDetected3 = false;
+	int uinumber;
+	bool uiDetected1 = false;
+	bool uiDetected2 = false;
+	bool uiDetected3 = false;
+
+    #if (UIDetect_EveryPixel == 0)
+		bool uiDetected01 = false;
+		bool uiDetected02 = false;
+		bool uiDetected03 = false;
+	#else
+		bool uiDetected01 = true;
+		bool uiDetected02 = true;
+		bool uiDetected03 = true;
+	#endif
+	
+	for (int i=0; i < PIXELNUMBER; i++){
+		if (UIPixelCoord_UINr[i].z == 13){uinumber = i; break;}
+	}
 
     for (int i=0; i < 3; i++){
-		  pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-      pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
-      uiPixelColor = UIPixelRGB[uinumber].rgb;
-      diff = abs(pixelColor - uiPixelColor);
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 13) uiDetected1 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 13) uiDetected1 = false;
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 14) uiDetected2 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 14) uiDetected2 = false;	
-		  if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 15) uiDetected3 = true;
-		  if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 15) uiDetected3 = false;
-		  if (uiDetected1 == true){uicolors.r = 0;}
-		  if (uiDetected1 == false){uicolors.r = 1;}
-		  if (uiDetected2 == true){uicolors.g = 0;}
-		  if (uiDetected2 == false){uicolors.g = 1;}
-		  if (uiDetected3 == true){uicolors.b = 0;}
-		  if (uiDetected3 == false){uicolors.b = 1;}
-		  if (uinumber == 15) {return float4(uicolors, 1);};
-		  uinumber += 1;
+		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
+		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		uiPixelColor = UIPixelRGB[uinumber].rgb;
+		diff = abs(pixelColor - uiPixelColor);
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 13) uiDetected1 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 13) uiDetected1 = false;
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 14) uiDetected2 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 14) uiDetected2 = false;	
+		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 15) uiDetected3 = true;
+		if (diff.r > toleranceR && diff.g > toleranceG && diff.b > toleranceB && UIPixelCoord_UINr[uinumber].z == 15) uiDetected3 = false;
+		#if (UIDetect_EveryPixel == 0)
+			if (uiDetected1 == true){uiDetected01 = true;}
+			if (uiDetected2 == true){uiDetected02 = true;}
+			if (uiDetected3 == true){uiDetected03 = true;}
+		#else
+			if (uiDetected1 == false){uiDetected01 = false;}
+			if (uiDetected2 == false){uiDetected02 = false;}
+			if (uiDetected3 == false){uiDetected03 = false;}
+		#endif	
+		if (uiDetected01 == true){uicolors.r = 0;}
+		if (uiDetected01 == false){uicolors.r = 1;}
+		if (uiDetected02 == true){uicolors.g = 0;}
+		if (uiDetected02 == false){uicolors.g = 1;}
+		if (uiDetected03 == true){uicolors.b = 0;}
+		if (uiDetected03 == false){uicolors.b = 1;}
+		if (UIPixelCoord_UINr[uinumber].z == UIPixelCoord_UINr[uinumber + 1].z){i -= 1;}
+		if (i == 3) {return float4(uicolors, 1);};
+		uinumber += 1;
 	  }
 	return float4(uicolors, 1);
 }
@@ -314,6 +434,7 @@ float4 PS_RestoreColor2(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : 
 	return float4(color, 1.0);
 }
 #endif
+
 #if (UIDetect_USE_RGB_MASK > 2)
 float4 PS_RestoreColor3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
@@ -333,6 +454,7 @@ float4 PS_RestoreColor3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : 
 	return float4(color, 1.0);
 }
 #endif
+
 #if (UIDetect_USE_RGB_MASK > 3)
 float4 PS_RestoreColor4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
@@ -352,6 +474,7 @@ float4 PS_RestoreColor4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : 
 	return float4(color, 1.0);
 }
 #endif
+
 #if (UIDetect_USE_RGB_MASK > 4)
 float4 PS_RestoreColor5(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
@@ -385,9 +508,16 @@ technique UIDetect
 {
     pass {
         VertexShader = PostProcessVS;
+        PixelShader = PS_StoreColor;
+        RenderTarget = texColorOrig;
+    }
+	
+    pass {
+        VertexShader = PostProcessVS;
         PixelShader = PS_UIDetect;
         RenderTarget = texUIDetect;
     }
+	
 #if (UIDetect_USE_RGB_MASK > 1)
     pass {
         VertexShader = PostProcessVS;
@@ -395,6 +525,7 @@ technique UIDetect
         RenderTarget = texUIDetect2;
     }
 #endif
+
 #if (UIDetect_USE_RGB_MASK > 2)
 	pass {
         VertexShader = PostProcessVS;
@@ -402,6 +533,7 @@ technique UIDetect
         RenderTarget = texUIDetect3;
     }
 #endif
+
 #if (UIDetect_USE_RGB_MASK > 3)
 	pass {
         VertexShader = PostProcessVS;
@@ -409,6 +541,7 @@ technique UIDetect
         RenderTarget = texUIDetect4;
     }
 #endif
+
 #if (UIDetect_USE_RGB_MASK > 4)
 	pass {
         VertexShader = PostProcessVS;
@@ -416,15 +549,7 @@ technique UIDetect
         RenderTarget = texUIDetect5;
     }
 #endif
-}
 
-technique UIDetect_Before
-{
-    pass {
-        VertexShader = PostProcessVS;
-        PixelShader = PS_StoreColor;
-        RenderTarget = texColorOrig;
-    }
 }
 
 technique UIDetect_After
