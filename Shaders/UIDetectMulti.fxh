@@ -1,5 +1,5 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//UIDetect header file
+//UIDetectMulti header file
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /*
@@ -30,21 +30,95 @@ UIPixelRGB[PIXELNUMBER]         //the UI pixels RGB values
 //Resolution: 1920x1080
 
 #ifndef UIDetect_USE_RGB_MASK
-    #define UIDetect_USE_RGB_MASK  1       // [1-5] Enable RGB UI mask (description above) 
+    #define UIDetect_USE_RGB_MASK  	3       // [1-5] Enable RGB UI mask (description above) 
 #endif
 
-#define PIXELNUMBER 3
+#ifndef UIDetect_INVERT
+    #define UIDetect_INVERT        	1       // [0 or 1] Enable Inverted Mode (only show effects when 
+#endif                            	         // UI is visible)
+
+#ifndef UIDetect_EveryPixel
+	#define UIDetect_EveryPixel	0	// [0 or 1] 0 means that all pixels with same .z value must match, 
+#endif                                  	// 1 means that only 1 pixel must match.
+
+#define PIXELNUMBER 36
 
 static const float3 UIPixelCoord_UINr[PIXELNUMBER]=
 {
-	float3(0,0,1),
-	float3(0,0,2),
-	float3(0,0,3),
+	float3(743,168,1),
+	float3(743,168,1),
+	float3(743,168,1),	
+	float3(743,168,1),
+	float3(743,168,1),
+	float3(743,168,1),	
+	float3(1850,47,2),
+	float3(1850,47,2),
+	float3(1839,30,2),
+	float3(184,65,3),
+	float3(92,852,4),
+	float3(103,882,4),
+	float3(112,912,4),
+	float3(122,944,4),	
+	float3(116,841,4),
+	float3(1169,310,5),
+	float3(1637,68,6),
+	float3(1637,68,6),
+	float3(1637,68,6),
+	float3(1637,68,6),
+	float3(1637,68,6),
+	float3(1637,68,6),
+	float3(381,852,7),
+	float3(392,882,7),
+	float3(402,912,7),
+	float3(412,945,7),
+	float3(416,853,7),
+	float3(773,946,8),
+	float3(773,946,8),
+	float3(172,203,9),
+	float3(488,1018,10),
+	float3(1850,47,11),
+	float3(184,65,12),
+	float3(488,1018,13),
+	float3(1850,47,14),
+	float3(184,65,15),
 };
 
 static const float3 UIPixelRGB[PIXELNUMBER]=
 {
-	float3(255,255,255),
-	float3(255,255,255),
-	float3(255,255,255),
+	float3(27,19,15),
+	float3(68,66,68),
+	float3(42,32,15),
+	float3(26,19,15),
+	float3(67,66,68),
+	float3(41,32,15),
+	float3(142,132,110),
+	float3(233,233,233),
+	float3(155,105,56),
+	float3(77,77,77),
+	float3(25,25,25),
+	float3(25,25,25),
+	float3(25,25,25),
+	float3(25,25,25),
+	float3(5,6,5),
+	float3(23,59,70),
+	float3(206,169,67),
+	float3(174,160,76),
+	float3(138,150,166),
+	float3(132,134,140),
+	float3(213,201,170),
+	float3(167,146,100),	
+	float3(25,25,25),
+	float3(25,25,25),
+	float3(25,25,25),
+	float3(25,25,25),
+	float3(5,6,5),
+	float3(129,117,95),
+	float3(131,119,96),
+	float3(201,171,138),
+	float3(25,25,25),
+	float3(142,132,110),
+	float3(77,77,77),
+	float3(25,25,25),
+	float3(142,132,110),
+	float3(77,77,77),
 };
