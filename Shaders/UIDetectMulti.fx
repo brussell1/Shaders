@@ -15,14 +15,14 @@
 
 uniform float fPixelPosX < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Pixel X-Position";
-    ui_category = "Show Pixel";
+    ui_category = "Pixel Selection";
     ui_min = 0; ui_max = BUFFER_WIDTH;
     ui_step = 1;
 > = 100;
 
 uniform float fPixelPosY < __UNIFORM_SLIDER_FLOAT1
     ui_label = "Pixel Y-Position";
-    ui_category = "Show Pixel";
+    ui_category = "Pixel Selection";
     ui_min = 0; ui_max = BUFFER_HEIGHT;
     ui_step = 1;
 > = 100;
@@ -48,13 +48,25 @@ uniform float toleranceB < __UNIFORM_SLIDER_FLOAT1
     ui_step = 1;
 > = 1;
 
+uniform bool BlackFont <
+	ui_label = "Font color";
+	ui_tooltip = "Check for Black font, Uncheck for White font";
+	ui_category = "Pixel Selection";
+> = 1;
+
 #include "ReShade.fxh"
 #include "UIDetectMulti.fxh"
+#include "DrawText.fxh"
 
 #undef BUFFER_PIXEL_SIZE
 #define BUFFER_PIXEL_SIZE float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT)
 texture texBackBuffer : COLOR;
 sampler BackBuffer { Texture = texBackBuffer; };
+
+texture textextcolor { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; };
+sampler textcolor { Texture = textextcolor; };
+texture textextcolor2 { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; };
+sampler textcolor2 { Texture = textextcolor2; };
 
 //textures and samplers
 texture texColorOrigMulti { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; };
@@ -100,6 +112,62 @@ float3 PS_ShowPixel(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
     float2 pixelCoord = float2(fPixelPosX, fPixelPosY) * BUFFER_PIXEL_SIZE;
     float3 pixelColor = tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).xyz;
     return pixelColor;
+}
+
+float4 State_Pixel_Color(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
+{
+    float res;
+	
+	float2 pixelCoord = float2(fPixelPosX, fPixelPosY) * BUFFER_PIXEL_SIZE;
+	float3 pixelColor = round(tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+
+	uint Red = trunc(pixelColor.x);
+	uint Green = trunc(pixelColor.y);
+	uint Blue = trunc(pixelColor.z);
+
+	int Red3 = (Red - (Red % 100)) / 100;
+	int Red2 = ((Red % 100) - (Red % 10)) / 10;
+	int Red1 = Red % 10;
+	int Green3 = (Green - (Green % 100)) / 100;
+	int Green2 = ((Green % 100) - (Green % 10)) / 10;
+	int Green1 = Green % 10;
+	int Blue3 = (Blue - (Blue % 100)) / 100;
+	int Blue2 = ((Blue % 100) - (Blue % 10)) / 10;
+	int Blue1 = Blue % 10;
+	
+    int line0[10]  = { __R, __E, __D, __Colon, __Space, __Space, __Space, Red3 + 16, Red2 + 16, Red1 + 16 }; //Red
+    int line1[10]  = { __G, __R, __E, __E, __N, __Colon, __Space, Green3 + 16, Green2 + 16, Green1 + 16 }; //Green
+    int line2[10]  = { __B, __L, __U, __E, __Colon, __Space, __Space, Blue3 + 16, Blue2 + 16, Blue1 + 16 }; //Blue
+    DrawText_String(float2(800.0 , 100.0), 50, 1, texcoord,  line0, 10, res);
+    DrawText_String(float2(800.0 , 134.0), 50, 1, texcoord,  line1, 10, res);
+    DrawText_String(float2(800.0 , 168.0), 50, 1, texcoord,  line2, 10, res);
+    return res;
+}
+
+float4 Fontinvert(float4 pos : SV_Position, float2 texCoord : TEXCOORD) : SV_Target
+{
+    float3 colors = tex2D(textcolor, texCoord).rgb;
+	return float4(1.0 - colors, 1.0);
+}
+
+float4 FontTransparancy(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
+{
+if (BlackFont == 0){
+	float3 color = tex2D(textcolor, texcoord).rgb;
+    float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
+	float mask = saturate(tex2D(textcolor, texcoord).r);
+	color = lerp(colorOrig, color, mask);
+	return float4(color, 1.0);
+}
+if (BlackFont == 1){
+	float3 color = tex2D(textcolor2, texcoord).rgb;
+    float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
+	float mask = saturate(1.0 - tex2D(textcolor2, texcoord).r);
+	color = lerp(colorOrig, color, mask);
+	return float4(color, 1.0);
+}
+float3 color;
+return float4(color,1.0);
 }
 
 float4 PS_UIDetect(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
@@ -596,4 +664,22 @@ technique UIDetect_ShowOriginalColor
         VertexShader = PostProcessVS;
         PixelShader = PS_ShowOrigColor;
     }
+}
+
+technique UIDetect_Statepixelcolor
+{
+	pass {
+		VertexShader = PostProcessVS;
+		PixelShader = State_Pixel_Color;
+        RenderTarget = textextcolor;
+	}
+	pass {
+		VertexShader = PostProcessVS;
+		PixelShader = Fontinvert;
+        RenderTarget = textextcolor2;
+	}
+	pass {
+		VertexShader = PostProcessVS;
+		PixelShader = FontTransparancy;
+	}
 }
