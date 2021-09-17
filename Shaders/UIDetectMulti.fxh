@@ -30,18 +30,18 @@ UIPixelRGB[PIXELNUMBER]         //the UI pixels RGB values
 //Resolution: 1920x1080
 
 #ifndef UIDetect_USE_RGB_MASK
-    #define UIDetect_USE_RGB_MASK  	3       // [1-5] Enable RGB UI mask (description above) 
+    #define UIDetect_USE_RGB_MASK  3       // [1-5] Enable RGB UI mask (description above) 
 #endif
 
 #ifndef UIDetect_INVERT
-    #define UIDetect_INVERT        	1       // [0 or 1] Enable Inverted Mode (only show effects when 
-#endif                            	         // UI is visible)
+    #define UIDetect_INVERT        0       // [0 or 1] Enable Inverted Mode (only show effects when 
+#endif                                     // UI is visible)
 
 #ifndef UIDetect_EveryPixel
-	#define UIDetect_EveryPixel	0	// [0 or 1] 0 means that all pixels with same .z value must match, 
-#endif                                  	// 1 means that only 1 pixel must match.
+	#define UIDetect_EveryPixel		0		// [0 or 1] 0 means that all pixels with same .z value must match, 
+#endif                                      // 1 means that only 1 pixel must match.
 
-#define PIXELNUMBER 36
+#define PIXELNUMBER 38
 
 static const float3 UIPixelCoord_UINr[PIXELNUMBER]=
 {
@@ -61,6 +61,8 @@ static const float3 UIPixelCoord_UINr[PIXELNUMBER]=
 	float3(122,944,4),	
 	float3(116,841,4),
 	float3(1169,310,5),
+	float3(1637,68,6),
+	float3(1637,68,6),
 	float3(1637,68,6),
 	float3(1637,68,6),
 	float3(1637,68,6),
@@ -104,6 +106,8 @@ static const float3 UIPixelRGB[PIXELNUMBER]=
 	float3(206,169,67),
 	float3(174,160,76),
 	float3(138,150,166),
+	float3(204,206,191),
+	float3(253,243,213),
 	float3(132,134,140),
 	float3(213,201,170),
 	float3(167,146,100),	
