@@ -51,49 +51,54 @@ uniform float toleranceB < __UNIFORM_SLIDER_FLOAT1
 #include "ReShade.fxh"
 #include "UIDetectMulti.fxh"
 
+#undef BUFFER_PIXEL_SIZE
+#define BUFFER_PIXEL_SIZE float2(BUFFER_RCP_WIDTH, BUFFER_RCP_HEIGHT)
+texture texBackBuffer : COLOR;
+sampler BackBuffer { Texture = texBackBuffer; };
+
 //textures and samplers
-texture texColorOrig { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; };
-sampler ColorOrig { Texture = texColorOrig; };
+texture texColorOrigMulti { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; };
+sampler ColorOrigMulti { Texture = texColorOrigMulti; };
 
-texture texUIDetectMask <source="UIDETECTMASKRGBMULTI.png";> { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-sampler UIDetectMask { Texture = texUIDetectMask; };
+texture texUIDetectMaskMulti <source="UIDETECTMASKRGBMULTI.png";> { Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+sampler UIDetectMaskMulti { Texture = texUIDetectMaskMulti; };
 
-texture texUIDetect { Width = 1; Height = 1; Format = RGBA8; };
-sampler UIDetect { Texture = texUIDetect; };
+texture texUIDetectMulti { Width = 1; Height = 1; Format = RGBA8; };
+sampler UIDetectMulti { Texture = texUIDetectMulti; };
 
 #if (UIDetect_USE_RGB_MASK > 1)
-	texture texUIDetectMask2 <source="UIDETECTMASKRGBMULTI2.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-	sampler UIDetectMask2 { Texture = texUIDetectMask2; };
-	texture texUIDetect2 { Width = 1; Height = 1; Format = RGBA8; };
-	sampler UIDetect2 { Texture = texUIDetect2; };
+	texture texUIDetectMaskMulti2 <source="UIDETECTMASKRGBMULTI2.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMaskMulti2 { Texture = texUIDetectMaskMulti2; };
+	texture texUIDetectMulti2 { Width = 1; Height = 1; Format = RGBA8; };
+	sampler UIDetectMulti2 { Texture = texUIDetectMulti2; };
 #endif
 
 #if (UIDetect_USE_RGB_MASK > 2)
-	texture texUIDetectMask3 <source="UIDETECTMASKRGBMULTI3.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-	sampler UIDetectMask3 { Texture = texUIDetectMask3; };
-	texture texUIDetect3 { Width = 1; Height = 1; Format = RGBA8; };
-	sampler UIDetect3 { Texture = texUIDetect3; };
+	texture texUIDetectMaskMulti3 <source="UIDETECTMASKRGBMULTI3.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMaskMulti3 { Texture = texUIDetectMaskMulti3; };
+	texture texUIDetectMulti3 { Width = 1; Height = 1; Format = RGBA8; };
+	sampler UIDetectMulti3 { Texture = texUIDetectMulti3; };
 #endif
 
 #if (UIDetect_USE_RGB_MASK > 3)
-	texture texUIDetectMask4 <source="UIDETECTMASKRGBMULTI4.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-	sampler UIDetectMask4 { Texture = texUIDetectMask4; };
-	texture texUIDetect4 { Width = 1; Height = 1; Format = RGBA8; };
-	sampler UIDetect4 { Texture = texUIDetect4; };
+	texture texUIDetectMaskMulti4 <source="UIDETECTMASKRGBMULTI4.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMaskMulti4 { Texture = texUIDetectMaskMulti4; };
+	texture texUIDetectMulti4 { Width = 1; Height = 1; Format = RGBA8; };
+	sampler UIDetectMulti4 { Texture = texUIDetectMulti4; };
 #endif
 
 #if (UIDetect_USE_RGB_MASK > 4)
-	texture texUIDetectMask5 <source="UIDETECTMASKRGBMULTI5.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
-	sampler UIDetectMask5 { Texture = texUIDetectMask5; };
-	texture texUIDetect5 { Width = 1; Height = 1; Format = RGBA8; };
-	sampler UIDetect5 { Texture = texUIDetect5; };
+	texture texUIDetectMaskMulti5 <source="UIDETECTMASKRGBMULTI5.png";>{ Width = BUFFER_WIDTH; Height = BUFFER_HEIGHT; Format=RGBA8; };
+	sampler UIDetectMaskMulti5 { Texture = texUIDetectMaskMulti5; };
+	texture texUIDetectMulti5 { Width = 1; Height = 1; Format = RGBA8; };
+	sampler UIDetectMulti5 { Texture = texUIDetectMulti5; };
 #endif
 
 //pixel shaders
 float3 PS_ShowPixel(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     float2 pixelCoord = float2(fPixelPosX, fPixelPosY) * BUFFER_PIXEL_SIZE;
-    float3 pixelColor = tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).xyz;
+    float3 pixelColor = tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).xyz;
     return pixelColor;
 }
 
@@ -123,7 +128,7 @@ float4 PS_UIDetect(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Ta
 
     for (int i=0; i < 3; i++){
 		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		pixelColor = round(tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
 		uiPixelColor = UIPixelRGB[uinumber].rgb;
 		diff = abs(pixelColor - uiPixelColor);
 		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 1) uiDetected1 = true;
@@ -181,7 +186,7 @@ float4 PS_UIDetect2(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 
     for (int i=0; i < 3; i++){
 		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		pixelColor = round(tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
 		uiPixelColor = UIPixelRGB[uinumber].rgb;
 		diff = abs(pixelColor - uiPixelColor);
 		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 4) uiDetected1 = true;
@@ -239,7 +244,7 @@ float4 PS_UIDetect3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 
     for (int i=0; i < 3; i++){
 		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		pixelColor = round(tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
 		uiPixelColor = UIPixelRGB[uinumber].rgb;
 		diff = abs(pixelColor - uiPixelColor);
 		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 7) uiDetected1 = true;
@@ -297,7 +302,7 @@ float4 PS_UIDetect4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 
     for (int i=0; i < 3; i++){
 		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		pixelColor = round(tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
 		uiPixelColor = UIPixelRGB[uinumber].rgb;
 		diff = abs(pixelColor - uiPixelColor);
 		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 10) uiDetected1 = true;
@@ -355,7 +360,7 @@ float4 PS_UIDetect5(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 
     for (int i=0; i < 3; i++){
 		pixelCoord = UIPixelCoord_UINr[uinumber].xy * BUFFER_PIXEL_SIZE;
-		pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
+		pixelColor = round(tex2Dlod(BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
 		uiPixelColor = UIPixelRGB[uinumber].rgb;
 		diff = abs(pixelColor - uiPixelColor);
 		if (diff.r < toleranceR && diff.g < toleranceG && diff.b < toleranceB && UIPixelCoord_UINr[uinumber].z == 13) uiDetected1 = true;
@@ -388,27 +393,27 @@ float4 PS_UIDetect5(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 #endif
 float4 PS_StoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
-    return tex2D(ReShade::BackBuffer, texcoord);
+    return tex2D(BackBuffer, texcoord);
 }
 
 float4 PS_ShowOrigColor(float4 pos : SV_position, float2 texcoord : TEXCOORD) : SV_Target
 {
-  float4 colorOrig = tex2D(ColorOrig, texcoord);
+  float4 colorOrig = tex2D(ColorOrigMulti, texcoord);
 	return colorOrig;
 }
 
 float4 PS_RestoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     #if (UIDetect_INVERT == 0)
-        float3 colorOrig = tex2D(ColorOrig, texcoord).rgb;
-        float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 colorOrig = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 color = tex2D(BackBuffer, texcoord).rgb;
     #else
-        float3 color = tex2D(ColorOrig, texcoord).rgb;
-        float3 colorOrig = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 color = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
     #endif
-  float3 uiMask = tex2D(UIDetectMask, texcoord).rgb;
+  float3 uiMask = tex2D(UIDetectMaskMulti, texcoord).rgb;
 	float3 mask;
-  float3 ui = tex2D(UIDetect, float2(0,0)).rgb;
+  float3 ui = tex2D(UIDetectMulti, float2(0,0)).rgb;
 	if (ui.r == 0)		{mask = uiMask.b; 		color = lerp(colorOrig, color, mask);}
 	if (ui.g == 0)		{mask = uiMask.g; 		color = lerp(colorOrig, color, mask);}
 	if (ui.b == 0)		{mask = uiMask.r; 		color = lerp(colorOrig, color, mask);}
@@ -419,15 +424,15 @@ float4 PS_RestoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : S
 float4 PS_RestoreColor2(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     #if (UIDetect_INVERT == 0)
-        float3 colorOrig = tex2D(ColorOrig, texcoord).rgb;
-        float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 colorOrig = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 color = tex2D(BackBuffer, texcoord).rgb;
     #else
-        float3 color = tex2D(ColorOrig, texcoord).rgb;
-        float3 colorOrig = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 color = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
     #endif
-  float3 uiMask = tex2D(UIDetectMask2, texcoord).rgb;
+  float3 uiMask = tex2D(UIDetectMaskMulti2, texcoord).rgb;
 	float3 mask;
-  float3 ui = tex2D(UIDetect2, float2(0,0)).rgb;
+  float3 ui = tex2D(UIDetectMulti2, float2(0,0)).rgb;
 	if (ui.r == 0)		{mask = uiMask.b; 		color = lerp(colorOrig, color, mask);}
 	if (ui.g == 0)		{mask = uiMask.g; 		color = lerp(colorOrig, color, mask);}
 	if (ui.b == 0)		{mask = uiMask.r; 		color = lerp(colorOrig, color, mask);}
@@ -439,15 +444,15 @@ float4 PS_RestoreColor2(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : 
 float4 PS_RestoreColor3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     #if (UIDetect_INVERT == 0)
-        float3 colorOrig = tex2D(ColorOrig, texcoord).rgb;
-        float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 colorOrig = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 color = tex2D(BackBuffer, texcoord).rgb;
     #else
-        float3 color = tex2D(ColorOrig, texcoord).rgb;
-        float3 colorOrig = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 color = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
     #endif
-  float3 uiMask = tex2D(UIDetectMask3, texcoord).rgb;
+  float3 uiMask = tex2D(UIDetectMaskMulti3, texcoord).rgb;
 	float3 mask;
-  float3 ui = tex2D(UIDetect3, float2(0,0)).rgb;
+  float3 ui = tex2D(UIDetectMulti3, float2(0,0)).rgb;
 	if (ui.r == 0)		{mask = uiMask.b; 		color = lerp(colorOrig, color, mask);}
 	if (ui.g == 0)		{mask = uiMask.g; 		color = lerp(colorOrig, color, mask);}
 	if (ui.b == 0)		{mask = uiMask.r; 		color = lerp(colorOrig, color, mask);}
@@ -459,15 +464,15 @@ float4 PS_RestoreColor3(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : 
 float4 PS_RestoreColor4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     #if (UIDetect_INVERT == 0)
-        float3 colorOrig = tex2D(ColorOrig, texcoord).rgb;
-        float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 colorOrig = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 color = tex2D(BackBuffer, texcoord).rgb;
     #else
-        float3 color = tex2D(ColorOrig, texcoord).rgb;
-        float3 colorOrig = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 color = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
     #endif
-  float3 uiMask = tex2D(UIDetectMask4, texcoord).rgb;
+  float3 uiMask = tex2D(UIDetectMaskMulti4, texcoord).rgb;
 	float3 mask;
-  float3 ui = tex2D(UIDetect4, float2(0,0)).rgb;
+  float3 ui = tex2D(UIDetectMulti4, float2(0,0)).rgb;
 	if (ui.r == 0)		{mask = uiMask.b; 		color = lerp(colorOrig, color, mask);}
 	if (ui.g == 0)		{mask = uiMask.g; 		color = lerp(colorOrig, color, mask);}
 	if (ui.b == 0)		{mask = uiMask.r; 		color = lerp(colorOrig, color, mask);}
@@ -479,15 +484,15 @@ float4 PS_RestoreColor4(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : 
 float4 PS_RestoreColor5(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
 {
     #if (UIDetect_INVERT == 0)
-        float3 colorOrig = tex2D(ColorOrig, texcoord).rgb;
-        float3 color = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 colorOrig = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 color = tex2D(BackBuffer, texcoord).rgb;
     #else
-        float3 color = tex2D(ColorOrig, texcoord).rgb;
-        float3 colorOrig = tex2D(ReShade::BackBuffer, texcoord).rgb;
+        float3 color = tex2D(ColorOrigMulti, texcoord).rgb;
+        float3 colorOrig = tex2D(BackBuffer, texcoord).rgb;
     #endif
-  float3 uiMask = tex2D(UIDetectMask5, texcoord).rgb;
+  float3 uiMask = tex2D(UIDetectMaskMulti5, texcoord).rgb;
 	float3 mask;
-  float3 ui = tex2D(UIDetect5, float2(0,0)).rgb;
+  float3 ui = tex2D(UIDetectMulti5, float2(0,0)).rgb;
 	if (ui.r == 0)		{mask = uiMask.b; 		color = lerp(colorOrig, color, mask);}
 	if (ui.g == 0)		{mask = uiMask.g; 		color = lerp(colorOrig, color, mask);}
 	if (ui.b == 0)		{mask = uiMask.r; 		color = lerp(colorOrig, color, mask);}
@@ -505,24 +510,18 @@ technique UIDetect_ShowPixel
 }
 
 technique UIDetect
-{
-    pass {
-        VertexShader = PostProcessVS;
-        PixelShader = PS_StoreColor;
-        RenderTarget = texColorOrig;
-    }
-	
+{	
     pass {
         VertexShader = PostProcessVS;
         PixelShader = PS_UIDetect;
-        RenderTarget = texUIDetect;
+        RenderTarget = texUIDetectMulti;
     }
 	
 #if (UIDetect_USE_RGB_MASK > 1)
     pass {
         VertexShader = PostProcessVS;
         PixelShader = PS_UIDetect2;
-        RenderTarget = texUIDetect2;
+        RenderTarget = texUIDetectMulti2;
     }
 #endif
 
@@ -530,7 +529,7 @@ technique UIDetect
 	pass {
         VertexShader = PostProcessVS;
         PixelShader = PS_UIDetect3;
-        RenderTarget = texUIDetect3;
+        RenderTarget = texUIDetectMulti3;
     }
 #endif
 
@@ -538,7 +537,7 @@ technique UIDetect
 	pass {
         VertexShader = PostProcessVS;
         PixelShader = PS_UIDetect4;
-        RenderTarget = texUIDetect4;
+        RenderTarget = texUIDetectMulti4;
     }
 #endif
 
@@ -546,10 +545,17 @@ technique UIDetect
 	pass {
         VertexShader = PostProcessVS;
         PixelShader = PS_UIDetect5;
-        RenderTarget = texUIDetect5;
+        RenderTarget = texUIDetectMulti5;
     }
 #endif
+}
 
+technique UIDetect_Before {
+    pass {
+        VertexShader = PostProcessVS;
+        PixelShader = PS_StoreColor;
+        RenderTarget = texColorOrigMulti;
+    }
 }
 
 technique UIDetect_After
