@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AreaCopy by brussell
-// v. 1.2
+// v. 1.21
 // License: CC BY 4.0
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -106,7 +106,8 @@ uniform float fAC_SourceOpacity <
 #include "ReShade.fxh"
 
 //pixel shaders
-float4 PS_AreaCopy(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target {
+float4 PS_AreaCopy(float2 texcoord : TEXCOORD) : SV_Target {
+    float2 pos = texcoord / ReShade::PixelSize;
     float4 color = tex2Dlod(ReShade::BackBuffer, float4(texcoord, 0, 0));
     float4 colorBackup = color;
     float2 areaCenter = fAC_Size/2.0;
@@ -136,18 +137,18 @@ float4 PS_AreaCopy(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Ta
     float4 colorDest= tex2Dlod(ReShade::BackBuffer, float4(destCoord, 0, 0));
 
     if (bAC_EnableSourceColorFill) {
-        if (pos.x > sourceTopLeft.x && pos.y > sourceTopLeft.y && pos.x < sourceBottomRight.x && pos.y < sourceBottomRight.y) {
+        if (pos.x >= sourceTopLeft.x && pos.y >= sourceTopLeft.y && pos.x <= sourceBottomRight.x && pos.y <= sourceBottomRight.y) {
             color.xyz = lerp(color.xyz, fAC_SourceFillColor, fAC_SourceOpacity);
         }
     }
 
     if (bAC_EnableDestOutline) {
-        if (pos.x > (destTopLeft.x - fAC_DestOutlineWidth) && pos.y > (destTopLeft.y - fAC_DestOutlineWidth) && pos.x < (destBottomRight.x + fAC_DestOutlineWidth) && pos.y < (destBottomRight.y + fAC_DestOutlineWidth)) {
+        if (pos.x >= (destTopLeft.x - fAC_DestOutlineWidth) && pos.y >= (destTopLeft.y - fAC_DestOutlineWidth) && pos.x <= (destBottomRight.x + fAC_DestOutlineWidth) && pos.y <= (destBottomRight.y + fAC_DestOutlineWidth)) {
             color.xyz = lerp(color.xyz, fAC_DestOutlineColor, fAC_DestOutlineOpacity);
         }
     }
 
-    if (pos.x > destTopLeft.x && pos.y > destTopLeft.y && pos.x < destBottomRight.x && pos.y < destBottomRight.y) {
+    if (pos.x >= destTopLeft.x && pos.y >= destTopLeft.y && pos.x <= destBottomRight.x && pos.y <= destBottomRight.y) {
         color.xyz = lerp(colorBackup.xyz, colorDest.xyz, fAC_DestOpacity);
     }
 
