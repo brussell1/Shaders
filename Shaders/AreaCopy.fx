@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AreaCopy by brussell
-// v. 1.21
+// v. 1.22
 // License: CC BY 4.0
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -106,11 +106,11 @@ uniform float fAC_SourceOpacity <
 #include "ReShade.fxh"
 
 //pixel shaders
-float4 PS_AreaCopy(float2 texcoord : TEXCOORD) : SV_Target {
+float4 PS_AreaCopy(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target {
     float2 pos = texcoord / ReShade::PixelSize;
     float4 color = tex2Dlod(ReShade::BackBuffer, float4(texcoord, 0, 0));
     float4 colorBackup = color;
-    float2 areaCenter = fAC_Size/2.0;
+    float2 areaCenter = fAC_Size / 2.0;
     float sine, cosine;
     float2 sourceCenterCoord;
 
@@ -130,7 +130,7 @@ float4 PS_AreaCopy(float2 texcoord : TEXCOORD) : SV_Target {
         destCoord -= sourceCenterCoord;
         destCoord.x *= ReShade::AspectRatio;
         destCoord = float2(cosine * destCoord.x - sine * destCoord.y, cosine * destCoord.y + sine * destCoord.x);
-        destCoord.x *= 1.0 / ReShade::AspectRatio;
+        destCoord.x /= ReShade::AspectRatio;
         destCoord += sourceCenterCoord;
     }
 
