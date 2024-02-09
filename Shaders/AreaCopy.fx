@@ -1,6 +1,6 @@
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // AreaCopy by brussell
-// v. 1.22
+// v. 1.23
 // License: CC BY 4.0
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -9,7 +9,7 @@ uniform float2 fAC_SourceXY <
     ui_label = "Source coordinates";
     ui_tooltip = "Top left x and y coordinate of the source area.";
     ui_type = "drag";
-    ui_min = 0.0;
+    ui_min = 1.0;
     ui_max = BUFFER_WIDTH;
     ui_step = 1.0;
 > = float2(600, 100);
@@ -18,7 +18,7 @@ uniform float2 fAC_DestXY <
     ui_label = "Destination coordinates";
     ui_tooltip = "Top left x and y coordinate of the destination area.";
     ui_type = "drag";
-    ui_min = 0.0;
+    ui_min = 1.0;
     ui_max = BUFFER_WIDTH;
     ui_step = 1.0;
 > = float2(1200, 600);
@@ -106,8 +106,9 @@ uniform float fAC_SourceOpacity <
 #include "ReShade.fxh"
 
 //pixel shaders
-float4 PS_AreaCopy(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target {
-    float2 pos = texcoord / ReShade::PixelSize;
+float4 PS_AreaCopy(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_Target
+{
+    float2 pos = vpos.xy + 1.0;
     float4 color = tex2Dlod(ReShade::BackBuffer, float4(texcoord, 0, 0));
     float4 colorBackup = color;
     float2 areaCenter = fAC_Size / 2.0;
@@ -156,7 +157,13 @@ float4 PS_AreaCopy(float4 vpos : SV_Position, float2 texcoord : TEXCOORD) : SV_T
 }
 
 //techniques
-technique AreaCopy {
+technique AreaCopy <
+    ui_tooltip =    "AreaCopy allows the duplication of a screen area (rectangle) to another part of the screen\n"
+                    "The copied area (destination area) can be rotated or zoomed in, with arbitrary opacity.\n"
+                    "It's also possible to set the source and destination coordinates to the same values, if just\n"
+                    "a zoom or rotation of a specific area is desired."
+                    ; >
+{
     pass {
         VertexShader = PostProcessVS;
         PixelShader = PS_AreaCopy;
