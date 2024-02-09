@@ -1,23 +1,8 @@
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // UIDetect by brussell
-// v. 2.2
+// v. 2.21
 // License: CC BY 4.0
-//
-// UIDetect is configured by editing the file UIDetect.fxh.
-// Please look there for a full description and usage of this shader.
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-#include "ReShadeUI.fxh"
-
-//effect parameters
-uniform int infotext<
-	ui_label = " ";
-    ui_text =
-		"Note:\n"
-        "UIDetect is configured by editing the file UIDetect.fxh.\n"
-		"Please look there for a full description and usage of this shader.\n";
-	ui_type = "radio";
-> ;
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 #include "ReShade.fxh"
 #include "UIDetect.fxh"
@@ -51,18 +36,18 @@ float PS_UIDetect(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : SV_Tar
     bool uiDetected = false;
     bool uiNext = false;
 
-    for (int i=0; i < PIXELNUMBER; i++)
+    for (int i = 0; i < PIXELNUMBER; i++)
     {
         [branch]
         if (UIPixelCoord_UINr[i].z - ui == 0) {
-            if (uiNext == false){
+            if (uiNext == false) {
                 pixelCoord = float2(UIPixelCoord_UINr[i].x + offset, UIPixelCoord_UINr[i].y + offset) * BUFFER_PIXEL_SIZE;
                 pixelColor = round(tex2Dlod(ReShade::BackBuffer, float4(pixelCoord, 0, 0)).rgb * 255);
                 uiPixelColor = UIPixelRGB[i].rgb;
                 diff = pixelColor - uiPixelColor;
                 if (!any(diff)) {
                     uiDetected = true;
-                }else{
+                } else {
                     uiDetected = false;
                     uiNext = true;
                 }
@@ -109,7 +94,11 @@ float4 PS_RestoreColor(float4 pos : SV_Position, float2 texcoord : TEXCOORD) : S
 }
 
 //techniques
-technique UIDetect
+technique UIDetect <
+    ui_tooltip =    "UIDetect can be used to automatically toggle effects depending on the\n"
+                    "visibility of UI elements. It is configured by editing the file UIDetect.fxh.\n"
+                    "Please look there for a full description and the usage of this shader.\n"
+                    ; >
 {
     pass {
         VertexShader = PostProcessVS;
